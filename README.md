@@ -7,6 +7,7 @@ Please note MFOC is able to recover keys from target only if it have a known key
 # Build from source
 
 ```
+sudo apt install libglib2.0-dev libusb-dev automake libnfc-dev libtool autoconf
 autoreconf -is
 ./configure
 make && sudo make install
