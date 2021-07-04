@@ -64,9 +64,9 @@ print_hex(const uint8_t *pbtData, const size_t szBytes)
   size_t  szPos;
 
   for (szPos = 0; szPos < szBytes; szPos++) {
-    printf("%02x  ", pbtData[szPos]);
+    printf("%02x", pbtData[szPos]);
   }
-  printf("\n");
+  //printf("\n");
 }
 
 void
@@ -88,7 +88,7 @@ print_hex_bits(const uint8_t *pbtData, const size_t szBits)
     else
       printf("%02x (%d bits)", pbtData[szBytes], uRemainder);
   }
-  printf("\n");
+  //printf("\n");
 }
 
 void

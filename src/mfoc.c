@@ -94,19 +94,8 @@ int main(int argc, char *const argv[])
 
   // Array with default Mifare Classic keys
   uint8_t defaultKeys[][6] = {
-    {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // Default key (first key used by program if no user defined key)
-    {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // NFCForum MAD key
-    {0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // NFCForum content key
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // Blank key
-    {0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5},
-    {0x4d, 0x3a, 0x99, 0xc3, 0x51, 0xdd},
-    {0x1a, 0x98, 0x2c, 0x7e, 0x45, 0x9a},
-    {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
-    {0x71, 0x4c, 0x5c, 0x88, 0x6e, 0x97},
-    {0x58, 0x7e, 0xe5, 0xf9, 0x35, 0x0f},
-    {0xa0, 0x47, 0x8c, 0xc3, 0x90, 0x91},
-    {0x53, 0x3c, 0xb6, 0xc7, 0x23, 0xf6},
-    {0x8f, 0xd0, 0xa4, 0xf2, 0x56, 0xe9}
+    {0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+    {0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa}  // Default key (first key used by program if no user defined key)
 
   };
 
@@ -201,10 +190,11 @@ int main(int argc, char *const argv[])
         break;
       case 'O':
         // File output
-        if (!(pfDump = fopen(optarg, "wb"))) {
-          fprintf(stderr, "Cannot open: %s, exiting\n", optarg);
-          exit(EXIT_FAILURE);
-        }
+        //if (!(pfDump = fopen(optarg, "wb"))) {
+        //  fprintf(stderr, "Cannot open: %s, exiting\n", optarg);
+        //  exit(EXIT_FAILURE);
+        //}
+          continue;
         // fprintf(stdout, "Output file: %s\n", optarg);
         break;
       case 'D':
@@ -225,8 +215,8 @@ int main(int argc, char *const argv[])
   }
 
   if (!pfDump) {
-    ERR("parameter -O is mandatory");
-    exit(EXIT_FAILURE);
+    //ERR("parameter -O is not mandatory");
+  //  exit(EXIT_FAILURE);
   }
 
   // Initialize reader/tag structures
@@ -258,8 +248,23 @@ int main(int argc, char *const argv[])
 
   /*
       // wait for tag to appear
-      for (i=0;!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) && i < 10; i++) zsleep (100);
-  */
+      for (i=0;!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) && i < 10; i++) sleep (100);
+
+
+        char passcustom[16];
+        fprintf(stdout, "Please enter pass :\n");
+        fgets(passcustom,16,stdin);
+        p = realloc(defKeys, defKeys_len + 6);
+        if (!p) {
+          ERR("Cannot allocate memory for defKeys");
+          exit(EXIT_FAILURE);
+        }
+        defKeys = p;
+        memset(defKeys + defKeys_len, 0, 6);
+        num_to_bytes(strtoll(passcustom, NULL, 16), 6, defKeys + defKeys_len);
+        fprintf(stdout, "The custom key 0x%012llx has been added to the default keys\n", bytes_to_num(defKeys + defKeys_len, 6));
+        defKeys_len = defKeys_len + 6;
+*/
 
   int tag_count;
   if ((tag_count = nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt)) < 0) {
@@ -286,22 +291,22 @@ int main(int argc, char *const argv[])
     case 0x08:
     case 0x88:
       if (get_rats_is_2k(t, r)) {
-          printf("Found Mifare Plus 2k tag\n");
+          //printf("Found Mifare Plus 2k tag\n");
           t.num_sectors = NR_TRAILERS_2k;
           t.num_blocks = NR_BLOCKS_2k;
       } else {
-        printf("Found Mifare Classic 1k tag\n");
+        //printf("Found Mifare Classic 1k tag\n");
         t.num_sectors = NR_TRAILERS_1k;
         t.num_blocks = NR_BLOCKS_1k;
       }
       break;
     case 0x09:
-      printf("Found Mifare Classic Mini tag\n");
+      //printf("Found Mifare Classic Mini tag\n");
       t.num_sectors = NR_TRAILERS_MINI;
       t.num_blocks = NR_BLOCKS_MINI;
       break;
     case 0x18:
-      printf("Found Mifare Classic 4k tag\n");
+      //printf("Found Mifare Classic 4k tag\n");
       t.num_sectors = NR_TRAILERS_4k;
       t.num_blocks = NR_BLOCKS_4k;
       break;
@@ -340,8 +345,8 @@ int main(int argc, char *const argv[])
 
   print_nfc_target(&t.nt, true);
 
-  fprintf(stdout, "\nTry to authenticate to all sectors with default keys...\n");
-  fprintf(stdout, "Symbols: '.' no key found, '/' A key found, '\\' B key found, 'x' both keys found\n");
+  //fprintf(stdout, "\nTry to authenticate to all sectors with default keys...\n");
+  //fprintf(stdout, "Symbols: '.' no key found, '/' A key found, '\\' B key found, 'x' both keys found\n");
   // Set the authentication information (uid)
   memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
   // Iterate over all keys (n = number of keys)
@@ -356,8 +361,8 @@ int main(int argc, char *const argv[])
       memcpy(mp.mpa.abtKey, defaultKeys[key], sizeof(mp.mpa.abtKey));
       key++;
     }
-    fprintf(stdout, "[Key: %012llx] -> ", bytes_to_num(mp.mpa.abtKey, 6));
-    fprintf(stdout, "[");
+    //fprintf(stdout, "[Key: %012llx] -> ", bytes_to_num(mp.mpa.abtKey, 6));
+    //fprintf(stdout, "[");
     i = 0; // Sector counter
     // Iterate over every block, where we haven't found a key yet
     for (block = 0; block <= t.num_blocks; ++block) {
@@ -438,10 +443,10 @@ int main(int argc, char *const argv[])
         t.sectors[i++].trailer = block;
       }
     }
-    fprintf(stdout, "]\n");
+   // fprintf(stdout, "]\n");
   }
 
-  fprintf(stdout, "\n");
+  //fprintf(stdout, "\n");
   for (i = 0; i < (t.num_sectors); ++i) {
     if(t.sectors[i].foundKeyA){
       fprintf(stdout, "Sector %02d - Found   Key A: %012llx ", i, bytes_to_num(t.sectors[i].KeyA, sizeof(t.sectors[i].KeyA)));
@@ -659,9 +664,13 @@ int main(int argc, char *const argv[])
 
   if (succeed) {
     i = t.num_sectors; // Sector counter
-    fprintf(stdout, "Auth with all sectors succeeded, dumping keys to a file!\n");
+    fprintf(stdout, "please select the line : \n");
     // Read all blocks
-    for (block = t.num_blocks; block >= 0; block--) {
+    //int input;
+    //scanf("%d",&input);
+
+      //block=input;
+      for (block = 20; block >= 7; block--) {
       trailer_block(block) ? i-- : i;
       failure = true;
 
@@ -677,11 +686,16 @@ int main(int argc, char *const argv[])
         mf_anticollision(t, r);
       } else { // and Read
         if ((res = nfc_initiator_mifare_cmd(r.pdi, MC_READ, block, &mp)) >= 0) {
-          fprintf(stdout, "Block %02d, type %c, key %012llx :", block, 'A', bytes_to_num(t.sectors[i].KeyA, 6));
+      
+          if (block == 8 || block == 12 || block == 16){
+          //fprintf(stdout, "-- ");
+          //fprintf(stdout, "\n Block %02d, type %c, key %012llx ", bytes_to_num(t.sectors[i].KeyB, 6));
           print_hex(mp.mpd.abtData, 16);
           mf_configure(r.pdi);
           mf_select_tag(r.pdi, &(t.nt));
+          }
           failure = false;
+
         } else {
           // Error, now try read() with B key
           if (res != NFC_ERFTRANS) {
@@ -700,11 +714,16 @@ int main(int argc, char *const argv[])
             mf_anticollision(t, r);
           } else { // and Read
             if ((res = nfc_initiator_mifare_cmd(r.pdi, MC_READ, block, &mp)) >= 0) {
-              fprintf(stdout, "Block %02d, type %c, key %012llx :", block, 'B', bytes_to_num(t.sectors[i].KeyB, 6));
-              print_hex(mp.mpd.abtData, 16);
-              mf_configure(r.pdi);
-              mf_select_tag(r.pdi, &(t.nt));
-              failure = false;
+
+                  
+                          printf("%s\n","on print\n");
+                          fprintf(stdout, "Block %02d, type %c, key %012llx :", block, 'B', bytes_to_num(t.sectors[i].KeyB, 6));
+                          print_hex(mp.mpd.abtData, 16);
+                          mf_configure(r.pdi);
+                          mf_select_tag(r.pdi, &(t.nt));
+                          failure = false;
+                      
+              
             } else {
               if (res != NFC_ERFTRANS) {
                 nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
@@ -724,16 +743,16 @@ int main(int argc, char *const argv[])
         if (!failure) memcpy(mtDump.amb[block].mbt.abtAccessBits, mp.mpd.abtData + 6, 4);
       } else if (!failure) memcpy(mtDump.amb[block].mbd.abtData, mp.mpd.abtData, 16);
       memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
-    }
+      }
 
     // Finally save all keys + data to file
-    uint16_t dump_size = (t.num_blocks + 1) * 16;
-    if (fwrite(&mtDump, 1, dump_size, pfDump) != dump_size) {
-      fprintf(stdout, "Error, cannot write dump\n");
-      fclose(pfDump);
-      goto error;
-    }
-    fclose(pfDump);
+    //uint16_t dump_size = (t.num_blocks + 1) * 16;
+    //if (fwrite(&mtDump, 1, dump_size, pfDump) != dump_size) {
+    //  fprintf(stdout, "Error, cannot write dump\n");
+    //  fclose(pfDump);
+    //  goto error;
+    //}
+    //fclose(pfDump);
   }
 
   free(t.sectors);
